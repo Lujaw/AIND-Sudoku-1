@@ -1,4 +1,20 @@
 assignments = []
+rows = 'ABCDEFGHI'
+cols = '123456789'
+
+
+def cross(A, B):
+    "Cross product of elements in A and elements in B."
+    return [ x + y for x in A for y in B]
+
+boxes = cross(rows,cols)
+row_units = [cross(row, cols) for row in rows]
+col_units = [cross(rows, col) for col in cols]
+square_units = [cross(row, col) for row in ('ABC','DEF',"GHI") for col in ('123','456','789')]
+unit_list = row_units + col_units + square_units
+units = dict((s, [u for u in unit_list if s in u] )for s in boxes)
+peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
+
 
 def assign_value(values, box, value):
     """
@@ -27,9 +43,6 @@ def naked_twins(values):
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
 
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    pass
 
 def grid_values(grid):
     """
@@ -41,7 +54,10 @@ def grid_values(grid):
             Keys: The boxes, e.g., 'A1'
             Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
     """
-    pass
+    assert len(grid) == 81
+    values = [cols if value == '.' else value for value in grid]
+    return dict(zip(boxes,values))
+
 
 def display(values):
     """
@@ -49,10 +65,21 @@ def display(values):
     Args:
         values(dict): The sudoku in dictionary form
     """
-    pass
+    width = 1+max(len(values[s]) for s in boxes)
+    line = '+'.join(['-'*(width*3)]*3)
+    for r in rows:
+        print(''.join(values[r+c].center(width)+('|' if c in '36' else '')
+                      for c in cols))
+        if r in 'CF': print(line)
+    return
 
 def eliminate(values):
-    pass
+    for k, v in values.items():
+      for peer in peers[k]:
+         if len(v) == 1:
+            assign_value(values, peer, values[peer].replace(v,""))
+    return values
+
 
 def only_choice(values):
     pass
@@ -72,6 +99,9 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
+    assignment = grid_values(grid)
+    assignment = eliminate(assignment)
+    return assignment
 
 if __name__ == '__main__':
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
